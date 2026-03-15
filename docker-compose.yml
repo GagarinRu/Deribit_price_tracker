@@ -1,0 +1,46 @@
+services:
+  fastapi-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: fastapi-app
+    ports:
+      - "${UVICORN_PORT}:${UVICORN_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - fastapi-db
+      - fastapi-redis
+    volumes:
+      - ./app/src:/app
+    networks:
+      - fastapi-network
+
+  fastapi-db:
+    image: postgres:17.6-alpine
+    container_name: fastapi-db
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fastapi-network
+
+  fastapi-redis:
+    image: redis:7-alpine
+    container_name: fastapi-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fastapi-network
+
+
+volumes:
+  postgres_data:
+
+networks:
+  fastapi-network:
+    driver: bridge
