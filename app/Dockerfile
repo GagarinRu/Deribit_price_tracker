@@ -14,5 +14,3 @@ COPY . .
 
 
 RUN chmod +x /opt/app/entrypoint.sh
-
-ENTRYPOINT ["/opt/app/entrypoint.sh"]

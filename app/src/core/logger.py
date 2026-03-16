@@ -1,7 +1,8 @@
+import logging
+import logging.config as logging_config
+
 LOGGING_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-LOGGING_JSON_FORMAT = (
-    "%(asctime)s %(levelname)s %(name)s %(module)s %(funcName)s %(lineno)d %(request_id)s %(message)s"
-)
+LOGGING_JSON_FORMAT = "%(asctime)s %(levelname)s %(name)s %(module)s %(funcName)s %(lineno)d %(request_id)s %(message)s"
 LOGGING_DATEFMT = "%d-%m-%Y %H:%M:%S"
 
 LOGGING_CONFIG = {
@@ -31,3 +32,10 @@ LOGGING_CONFIG = {
         },
     },
 }
+
+logging_config.dictConfig(LOGGING_CONFIG)
+
+
+def get_logger(name: str) -> logging.Logger:
+    """Получить логгер с заданным именем."""
+    return logging.getLogger(name)

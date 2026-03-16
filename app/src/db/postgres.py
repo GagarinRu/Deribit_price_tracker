@@ -7,9 +7,15 @@ import uuid
 
 from alembic.config import Config
 from redis import asyncio as aioredis
-from sqlalchemy import UUID, MetaData
+from sqlalchemy import UUID
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import Mapped, declarative_base, declared_attr, mapped_column, sessionmaker
+from sqlalchemy.orm import (
+    Mapped,
+    declarative_base,
+    declared_attr,
+    mapped_column,
+    sessionmaker,
+)
 from src.core.config import postgres_settings, project_settings
 
 instance_id = os.getenv("HOSTNAME", "unknown_instance")
@@ -23,7 +29,9 @@ class PreBase:
         """Добавляет название таблицы по названию класса в метаданные модели в стиле snake_case."""
         return re.sub(r"(?<!^)(?=[A-Z])", "_", self.__name__).lower()
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, sort_order=-1)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, sort_order=-1
+    )
 
 
 Base = declarative_base(cls=PreBase)
@@ -67,7 +75,9 @@ async def create_database(redis_client: aioredis.Redis, max_wait_time: int = 300
             if waited_time >= max_wait_time:
                 logger.error("Тайм-аут ожидания инициализации базы данных")
                 raise TimeoutError("Тайм-аут ожидания инициализации базы данных")
-            logger.info(f"Ожидание завершено после {waited_time} секунд, база данных уже инициализирована")
+            logger.info(
+                f"Ожидание завершено после {waited_time} секунд, база данных уже инициализирована"
+            )
     except aioredis.RedisError as e:
         logger.error(f"Ошибка подключения к Redis: {e}")
         raise

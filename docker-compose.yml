@@ -1,24 +1,25 @@
 services:
-  fastapi-app:
+  deribit-app:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: fastapi-app
+    container_name: deribit-app
+    entrypoint: ["/opt/app/entrypoint.sh"]
     ports:
       - "${UVICORN_PORT}:${UVICORN_PORT}"
     env_file:
       - .env
     depends_on:
-      - fastapi-db
-      - fastapi-redis
+      - deribit-db
+      - deribit-redis
     volumes:
       - ./app/src:/app
     networks:
-      - fastapi-network
+      - deribit-network
 
-  fastapi-db:
+  deribit-db:
     image: postgres:17.6-alpine
-    container_name: fastapi-db
+    container_name: deribit-db
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     env_file:
@@ -27,20 +28,57 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - fastapi-network
+      - deribit-network
 
-  fastapi-redis:
+  deribit-redis:
     image: redis:7-alpine
-    container_name: fastapi-redis
+    container_name: deribit-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
-      - fastapi-network
+      - deribit-network
+
+  celery-worker:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    command: celery -A src.tasks worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - deribit-db
+      - deribit-redis
+    volumes:
+      - ./app/src:/app
+    networks:
+      - deribit-network
+
+  celery-beat:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: celery-beat
+    command: celery -A src.tasks beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    env_file:
+      - .env
+    depends_on:
+      - deribit-db
+      - deribit-redis
+    volumes:
+      - ./app/src:/app
+      - celerybeat_data:/tmp
+    networks:
+      - deribit-network
 
 
 volumes:
   postgres_data:
+  celerybeat_data:
+  redis_data:
 
 networks:
-  fastapi-network:
+  deribit-network:
     driver: bridge
